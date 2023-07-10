@@ -229,8 +229,8 @@ class PermitFile(models.Model):
 # In addition, the Building_Permits-Companies relation is managed here.
 class Permission(models.Model):
 
-    user_id = models.ForeignKey(User, on_delete=models.RESTRICT, validators=[validate_status_options],
-                                          db_column='user_id', related_name='permission',
+    user = models.ForeignKey(User, on_delete=models.RESTRICT, validators=[validate_status_options],
+                                          db_column='user', related_name='permission',
                                           related_query_name='permission')
     company = models.ForeignKey('Company', on_delete=models.RESTRICT,  db_column='company',
                                    related_name='permission', related_query_name='permission')
@@ -243,6 +243,6 @@ class Permission(models.Model):
     def __repr__(self):
         return f"\nFrom The Table 'Permission':\n" \
                f"id - {self.pk}\n" \
-               f"user_id - {self.user_id}\n" \
+               f"user_id - {self.user}\n" \
                f"company_id - {self.company}\n" \
                f"role - {self.role}\n"
