@@ -1,13 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from buildup.buildup_app.decorators import deleted_selector
-from buildup.buildup_app.fields_classes import UpperCaseCharField
-from buildup.buildup_app.validators import validate_status_options, validate_roles_options
+from buildup_app.decorators import deleted_selector
+from buildup_app.fields_classes import UpperCaseCharField
+from buildup_app.validators import validate_status_options, validate_roles_options
 
 
 # - Company -
-# The Company Manager creates the company and his own user,
+# The Company Manager creates the company and his own user
 # and he is the one who will create the company's workers users after.
 # You can't open your own user, it will mean that you opened a new company.
 # If you work for a specific company, the company manager will create your user.
