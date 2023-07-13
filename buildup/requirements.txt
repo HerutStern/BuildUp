@@ -3,4 +3,3 @@ psycopg2
 djangorestframework
 django-filter
 djangorestframework-simplejwt
-requests

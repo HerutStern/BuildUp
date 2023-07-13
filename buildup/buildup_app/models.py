@@ -17,6 +17,7 @@ from buildup_app.validators import validate_status_options, validate_roles_optio
 class Company(models.Model):
     company_name = models.CharField(max_length=256, db_column='company_name', null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
+
     class Meta:
         db_table = 'company'
 
