@@ -1,7 +1,13 @@
+from rest_framework import status
+from email.message import EmailMessage
+import ssl
+import smtplib
+from rest_framework.response import Response
 
 
 # - Sending an Email Function -
 def send_an_email(request):
+
     # buildup Email password - ***
     # buildup Email - ***
 

@@ -1,10 +1,6 @@
-from email.message import EmailMessage
-import ssl
-import smtplib
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status, request
 from rest_framework.decorators import api_view, permission_classes
 
 from buildup_app.serializers import SignupSerializer, CreateCompanySerializer
