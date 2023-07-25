@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
 
 
 def validate_status_options(value):
@@ -10,3 +10,5 @@ def validate_roles_options(value):
     roles_list = ['QUALITY_CHECKER', 'PERMIT_INSPECTOR', 'FINAL_APPROVAL', 'COMPANY_MANAGER', 'PROJECT_MANAGER']
     if value not in roles_list:
         raise ValidationError(f'{value} is not a valid role choice.')
+
+

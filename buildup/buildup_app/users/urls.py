@@ -16,17 +16,18 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from buildup_app import views
-from buildup_app.views import signup_new_company
+from buildup_app.users import views
+from buildup_app.users.views import signup
 
 router = DefaultRouter()
 
 urlpatterns = [
     path('auth/login', TokenObtainPairView.as_view()),
     path('auth/refresh', TokenRefreshView.as_view()),
-    path('auth/signup', signup_new_company),
-    path('auth/user_information', views.get_user_information),
-    path('email', views.send_an_email),
+    path('auth/signup', signup),
+    path('auth/user_information', views.user_information),
+    path('auth/all_company_users/<int:company_id>', views.get_all_company_users),
+    path('auth/user_delete/<int:user_id>', views.user_delete),
 ]
 
 urlpatterns.extend(router.urls)

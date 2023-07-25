@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 from buildup_app.decorators import deleted_selector
-from buildup_app.fields_classes import UpperCaseCharField
+from buildup_app.fields import UpperCaseCharField
 from buildup_app.validators import validate_status_options, validate_roles_options
 
 
@@ -19,7 +19,8 @@ class Company(models.Model):
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
 
     class Meta:
-        db_table = 'company'
+        db_table = ['company']
+        ordering = ['-id']
 
     @deleted_selector
     def __str__(self, sentence):
@@ -40,12 +41,13 @@ class Company(models.Model):
 # Just files that will be on the website, such as procedures forms, examples of construction plans and more...
 class CompanyFile(models.Model):
     company = models.ForeignKey('Company', on_delete=models.RESTRICT, db_column='company',
-                                   related_name='company_file', related_query_name='company_file')
+                                related_name='company_file', null=False, blank=False)
     file_name = models.CharField(max_length=256, db_column='file_name', null=False, blank=False)
-    file_link = models.CharField(max_length=256, db_column='file_link', null=False, blank=False)
+    file_link = models.FileField(upload_to='company_file_uploads', max_length=256, db_column='file_link', null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
     class Meta:
         db_table = 'company_file'
+        ordering = ['-id']
 
     @deleted_selector
     def __str__(self, sentence):
@@ -66,14 +68,15 @@ class CompanyFile(models.Model):
 # The statuses and approvals of the building permits have their own Tables.
 class BuildingPermit(models.Model):
     company = models.ForeignKey('Company', on_delete=models.RESTRICT, db_column='company',
-                                   related_name='building_permit', related_query_name='building_permit')
+                                related_name='building_permit', null=False, blank=False)
     project_manager_user_id = models.ForeignKey(User, on_delete=models.RESTRICT, db_column='project_manager_user_id',
-                                                related_name='building_permit', related_query_name='building_permit')
+                                                related_name='building_permit', null=False, blank=False)
     building_permit_name = models.CharField(max_length=256, db_column='building_permit_name',
-                                    null=False, blank=False)
+                                        null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
     class Meta:
         db_table = 'building_permit'
+        ordering = ['-id']
 
     @deleted_selector
     def __str__(self, sentence):
@@ -102,16 +105,18 @@ class BuildingPermit(models.Model):
 # but the user_id will not change. It just means they signed the permit on his behalf. Just like a Rubber Stamp.
 class PermitStatus(models.Model):
     building_permit = models.ForeignKey('BuildingPermit', on_delete=models.RESTRICT, db_column='building_permit',
-                                   related_name='permit_status', related_query_name='permit_status')
-    status = UpperCaseCharField(max_length=256, validators=[validate_status_options], db_column='status')
-    start_date = models.DateField(db_column='start_date', auto_now_add=True,
-                                  null=False, blank=False)  # The date the row was created (won't change on updates)
+                                        related_name='permit_status', null=False, blank=False)
+    status = UpperCaseCharField(max_length=256, validators=[validate_status_options], db_column='status',
+                                null=False, blank=False)
+    start_date = models.DateField(db_column='start_date', auto_now_add=True)  # The date the row was created (won't change on updates)
     approving_user_id = models.ForeignKey(User, on_delete=models.RESTRICT, validators=[validate_status_options],
                                          db_column='approving_user_id', related_name='permits_statuses',
-                                         related_query_name='permit_status')
+                                          null=True, blank=True)
     is_approved = models.BooleanField(db_column='is_approved', default=False)
     class Meta:
         db_table = 'permit_status'
+        ordering = ['-id']
+
     def __str__(self):
         return f'\nPermit {self.building_permit.building_permit_name}\n' \
                f'Status - {self.status}\n' \
@@ -132,12 +137,14 @@ class PermitStatus(models.Model):
 # (by changing column "is_deleted" or adding a new section)
 class SectionsTemplate(models.Model):
     company = models.ForeignKey('Company', on_delete=models.RESTRICT, db_column='company',
-                                   related_name='sections_template', related_query_name='section_template')
+                                related_name='sections_template', null=False, blank=False)
     section_name = models.CharField(max_length=256, db_column='section_name',
                                     null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
     class Meta:
         db_table = 'sections_template'
+        ordering = ['-id']
+
     @deleted_selector
     def __str__(self, sentence):
         if self.is_deleted:
@@ -158,12 +165,14 @@ class SectionsTemplate(models.Model):
 # (by changing column "is_deleted" or adding a new file)
 class FilesTemplate(models.Model):
     company = models.ForeignKey('Company', on_delete=models.RESTRICT, db_column='company',
-                                   related_name='files_template', related_query_name='file_template')
+                                related_name='files_template', null=False, blank=False)
     file_name = models.CharField(max_length=256, db_column='file_name',
                                     null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
     class Meta:
         db_table = 'files_template'
+        ordering = ['-id']
+
     @deleted_selector
     def __str__(self, sentence):
         if self.is_deleted:
@@ -183,13 +192,15 @@ class FilesTemplate(models.Model):
 class PermitSection(models.Model):
 
     sections_template = models.ForeignKey('SectionsTemplate', on_delete=models.RESTRICT, db_column='sections_template',
-                                    related_name='permit_section', related_query_name='permit_section',
-                                    null=False, blank=False)
+                                    related_name='permit_section', null=False, blank=False)
+    building_permit = models.ForeignKey('BuildingPermit', on_delete=models.RESTRICT, db_column='building_permit',
+                                        related_name='permit_section', null=True, blank=True)
     content = models.CharField(max_length=600, db_column='content',
                                     null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
     class Meta:
         db_table = 'permit_section'
+        ordering = ['-id']
 
     @deleted_selector
     def __str__(self, sentence):
@@ -201,6 +212,7 @@ class PermitSection(models.Model):
         return f"\nFrom The Table 'permit_section':\n" \
                f"id - {self.pk}\n" \
                f"template_id - {self.sections_template}\n" \
+               f"building_permit - {self.building_permit}\n" \
                f"content - {self.content}\n" \
                f"is_deleted - {self.is_deleted}\n"
 
@@ -209,18 +221,23 @@ class PermitSection(models.Model):
 # These are the files, taken from the template, that are related to a building permit.
 class PermitFile(models.Model):
     files_template = models.ForeignKey('FilesTemplate', on_delete=models.RESTRICT,  db_column='files_template',
-                                   related_name='permit_file', related_query_name='permit_file')
-    file_link = models.CharField(max_length=256, db_column='file_link',
+                                        related_name='permit_file', null=False, blank=False)
+    building_permit = models.ForeignKey('BuildingPermit', on_delete=models.RESTRICT, db_column='building_permit',
+                                        related_name='permits_file', null=True, blank=True)
+    file_link = models.FileField(upload_to='permits_file_uploads', max_length=256, db_column='file_link',
                                     null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
     class Meta:
         db_table = 'permits_file'
+        ordering = ['-id']
+
     def __str__(self):
         return self.file_link
     def __repr__(self):
         return f"\nFrom The Table 'file':\n" \
                f"id - {self.pk}\n" \
                f"template_id - {self.files_template}\n" \
+               f"building_permit - {self.building_permit}\n" \
                f"file_link - {self.file_link}\n" \
                f"is_deleted - {self.is_deleted}\n"
 
@@ -231,14 +248,14 @@ class PermitFile(models.Model):
 class Permission(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.RESTRICT, validators=[validate_status_options],
-                                          db_column='user', related_name='permission',
-                                          related_query_name='permission')
+                            db_column='user', related_name='permission', null=False, blank=False)
     company = models.ForeignKey('Company', on_delete=models.RESTRICT,  db_column='company',
-                                   related_name='permission', related_query_name='permission')
+                                related_name='permission', null=False, blank=False)
     role = UpperCaseCharField(max_length=256, db_column='role', validators=[validate_roles_options],
                             null=False, blank=False)
     class Meta:
         db_table = 'permission'
+        ordering = ['-id']
     def __str__(self):
         return self.role
     def __repr__(self):
