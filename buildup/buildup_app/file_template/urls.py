@@ -14,15 +14,12 @@ Including another URLconf
 """
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from buildup_app.company_files import views
+from buildup_app.file_template.views import FileTemplateViewSet
 
 router = DefaultRouter()
+router.register('file_template', FileTemplateViewSet)
 
 urlpatterns = [
-    path('files/add_company_file/', views.add_company_file),
-    path('files/get_company_file_by_id/<int:company_file_id>', views.get_company_file_by_id),
-    path('files/get_company_files_by_company_id/<int:company_id>', views.get_company_files_by_company_id)
-    # path('email', views.send_an_email),
 ]
 
 urlpatterns.extend(router.urls)

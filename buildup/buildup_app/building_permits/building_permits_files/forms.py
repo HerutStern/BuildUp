@@ -1,5 +1,5 @@
 from django import forms
-from buildup_app.company_files.validators import validate_file_type, validate_file_size
+from buildup_app.company_file.validators import validate_file_type, validate_file_size
 from buildup_app.models import PermitFile
 
 # Upload files - for PermitFile

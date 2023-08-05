@@ -1,266 +1,200 @@
 from django.db import models
 from django.contrib.auth.models import User
-
 from buildup_app.decorators import deleted_selector
-from buildup_app.fields import UpperCaseCharField
-from buildup_app.validators import validate_status_options, validate_roles_options
+from buildup_app.customized_fields import UpperCaseCharField
+from buildup_app.validators import validate_building_permit_status, validate_role
 
 
-# - Company -
-# The Company Manager creates the company and his own user
-# and he is the one who will create the company's workers users after.
-# You can't open your own user, it will mean that you opened a new company.
-# If you work for a specific company, the company manager will create your user.
-# Creating a new company meaning you won't be able to work with the other company DB.
+
+# The Company Manager on signup creates the company while creating his own user.
+# The company's project managers (the ones that open building permits),
+# will add the company number of the company they work with on signup,
+# so they will be associated with the company.
+# project managers creating a new company meaning they won't be able to send their building permits
+# to the company they work with.
 # Companies can't see and work with other companies building permits.
-# Each company has its own DB.
 class Company(models.Model):
-    company_name = models.CharField(max_length=256, db_column='company_name', null=False, blank=False)
+
+    name = models.CharField(max_length=256, db_column='name', unique=True, null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
 
     class Meta:
-        db_table = ['company']
-        ordering = ['-id']
+        db_table = 'company'
 
     @deleted_selector
     def __str__(self, sentence):
         if self.is_deleted:
             return sentence
         else:
-            return f"{self.company_name} company"
-    def __repr__(self):
-        return f"\nFrom The Table 'company':\n" \
-               f"id - {self.pk}\n" \
-               f"company_name - {self.company_name}\n" \
-               f"is_deleted - {self.is_deleted}\n"
-
+            return f"{self.name} company"
 
 # - Company Files -
-# All the files that the company manager put on the website, for the workers to download.
-# *** It is not the building permits files table!
-# Just files that will be on the website, such as procedures forms, examples of construction plans and more...
+# All the files that the company manager puts on the website,
+# for the project managers to download if they need to.
+# These are not the building permits files!!
+# Just files that will be on the website,
+# such as procedures forms, examples of construction plans and more...
 class CompanyFile(models.Model):
+
     company = models.ForeignKey('Company', on_delete=models.RESTRICT, db_column='company',
-                                related_name='company_file', null=False, blank=False)
-    file_name = models.CharField(max_length=256, db_column='file_name', null=False, blank=False)
-    file_link = models.FileField(upload_to='company_file_uploads', max_length=256, db_column='file_link', null=False, blank=False)
-    is_deleted = models.BooleanField(db_column='is_deleted', default=False)
+                                related_name='company_file')
+    name = models.CharField(max_length=256, db_column='name', null=False, blank=False)
+                            # The name for the file
+    link = models.FileField(upload_to='company_file_uploads', max_length=256, db_column='link',
+                            null=False, blank=False)
+
     class Meta:
         db_table = 'company_file'
-        ordering = ['-id']
+        ordering = ['name']
 
     @deleted_selector
     def __str__(self, sentence):
         if self.is_deleted:
             return sentence
         else:
-            return f"File {self.file_name} - {self.file_link}"
-    def __repr__(self):
-        return f"\nFrom The Table 'company_file':\n" \
-               f"id - {self.pk}\n" \
-               f"company_id - {self.company}\n" \
-               f"file_name - {self.file_name}\n" \
-               f"file_link - {self.file_link}\n" \
-               f"is_deleted - {self.is_deleted}\n"
-
+            return f"{self.name}"
 
 # - Building Permits -
-# The statuses and approvals of the building permits have their own Tables.
 class BuildingPermit(models.Model):
+
     company = models.ForeignKey('Company', on_delete=models.RESTRICT, db_column='company',
-                                related_name='building_permit', null=False, blank=False)
-    project_manager_user_id = models.ForeignKey(User, on_delete=models.RESTRICT, db_column='project_manager_user_id',
-                                                related_name='building_permit', null=False, blank=False)
-    building_permit_name = models.CharField(max_length=256, db_column='building_permit_name',
-                                        null=False, blank=False)
-    is_deleted = models.BooleanField(db_column='is_deleted', default=False)
+                                related_name='building_permit')
+    user = models.ForeignKey(User, on_delete=models.RESTRICT, db_column='user',
+                             related_name='building_permit')
+                            # This is the user who created the building permit,
+                            # which is the project manager.
+    name = models.CharField(max_length=256, db_column='name',unique=True, null=False, blank=False)
+                            # This is the building permit name, not the user's or the company's name.
+    creation_date = models.DateField(db_column='creation_date', auto_now_add=True)
+    status = UpperCaseCharField(max_length=20, db_column="status", default='PENDING',
+                                validators=[validate_building_permit_status])
+    approval_date = models.DateField(db_column='approval_date', blank=True, null=True)
+
     class Meta:
         db_table = 'building_permit'
-        ordering = ['-id']
+        ordering = ['creation_date']
 
     @deleted_selector
     def __str__(self, sentence):
         if self.is_deleted:
             return sentence
         else:
-            return f'Permit - {self.building_permit_name}, managed by {self.project_manager_user_id.name}'
-    def __repr__(self):
-        return f"\nFrom The Table 'building_permit':\n" \
-               f"id - {self.pk}\n" \
-               f"company_id - {self.company}\n" \
-               f"project_manager_user_id - {self.project_manager_user_id}\n" \
-               f"building_permit_name - {self.building_permit_name}\n" \
-               f"is_deleted - {self.is_deleted}\n"
-
-
-# - Permits Statuses -
-# The statuses rows are being created any time the permit changes its status,
-# the user who changed the status will go to the 'user_id' section.
-# the 'user_id' section will be completed when the user changed the permit to the next status,
-# So 'user_id' might be null.
-# On the Signatures_Round status, there will be created one row for each user_id who needs to sign,
-# so as long as they are not all approved, we know it won't change to the next status.
-# There are might be other people who will approve the permit,
-# instead of the user_id that have been chosen (such as the company manager),
-# but the user_id will not change. It just means they signed the permit on his behalf. Just like a Rubber Stamp.
-class PermitStatus(models.Model):
-    building_permit = models.ForeignKey('BuildingPermit', on_delete=models.RESTRICT, db_column='building_permit',
-                                        related_name='permit_status', null=False, blank=False)
-    status = UpperCaseCharField(max_length=256, validators=[validate_status_options], db_column='status',
-                                null=False, blank=False)
-    start_date = models.DateField(db_column='start_date', auto_now_add=True)  # The date the row was created (won't change on updates)
-    approving_user_id = models.ForeignKey(User, on_delete=models.RESTRICT, validators=[validate_status_options],
-                                         db_column='approving_user_id', related_name='permits_statuses',
-                                          null=True, blank=True)
-    is_approved = models.BooleanField(db_column='is_approved', default=False)
-    class Meta:
-        db_table = 'permit_status'
-        ordering = ['-id']
-
-    def __str__(self):
-        return f'\nPermit {self.building_permit.building_permit_name}\n' \
-               f'Status - {self.status}\n' \
-               f'Date started - {self.start_date.__str__()}\n'
-    def __repr__(self):
-        return f"\nFrom The Table 'permit_status':\n" \
-               f"id - {self.pk}\n" \
-               f"permit_id - {self.building_permit}\n" \
-               f"status - {self.status}\n" \
-               f"start_date - {self.start_date}\n" \
-               f"approving_user_id - {self.approving_user_id}\n" \
-               f"is_approved - {self.is_approved}\n"
+            return f'Permit - {self.name}, managed by {self.user.name}'
 
 
 # - Sections Template -
 # these are the sections the project manager will need to fill for sending a building permit.
 # Each company has its own sections, that can be changed any time by the company manager
 # (by changing column "is_deleted" or adding a new section)
-class SectionsTemplate(models.Model):
+class SectionTemplate(models.Model):
+
     company = models.ForeignKey('Company', on_delete=models.RESTRICT, db_column='company',
-                                related_name='sections_template', null=False, blank=False)
-    section_name = models.CharField(max_length=256, db_column='section_name',
-                                    null=False, blank=False)
+                                related_name='section_template')
+    name = models.CharField(max_length=256, db_column='name', null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
+
     class Meta:
-        db_table = 'sections_template'
-        ordering = ['-id']
+        db_table = 'section_template'
+        ordering = ['id']
 
     @deleted_selector
     def __str__(self, sentence):
         if self.is_deleted:
             return sentence
         else:
-            return f'Section - {self.section_name}'
-    def __repr__(self):
-        return f"\nFrom The Table 'sections_template':\n" \
-               f"id - {self.pk}\n" \
-               f"company_id - {self.company}\n" \
-               f"section_name - {self.section_name}\n" \
-               f"is_deleted - {self.is_deleted}\n"
+            return f'The section is - {self.name}'
 
 
 # - Files Template -
 # these are the files the project manager will need to add for sending a building permit.
 # Each company has its own files, that can be changed any time by the company manager
 # (by changing column "is_deleted" or adding a new file)
-class FilesTemplate(models.Model):
+class FileTemplate(models.Model):
+
     company = models.ForeignKey('Company', on_delete=models.RESTRICT, db_column='company',
-                                related_name='files_template', null=False, blank=False)
-    file_name = models.CharField(max_length=256, db_column='file_name',
-                                    null=False, blank=False)
+                                related_name='file_template')
+    name = models.CharField(max_length=256, db_column='name', null=False, blank=False)
     is_deleted = models.BooleanField(db_column='is_deleted', default=False)
+
     class Meta:
-        db_table = 'files_template'
-        ordering = ['-id']
+        db_table = 'file_template'
+        ordering = ['id']
 
     @deleted_selector
     def __str__(self, sentence):
         if self.is_deleted:
             return sentence
         else:
-            return f'File - {self.file_name}'
-    def __repr__(self):
-        return f"\nFrom The Table 'files_template':\n" \
-               f"id - {self.pk}\n" \
-               f"company_id - {self.company}\n" \
-               f"file_name - {self.file_name}\n" \
-               f"is_deleted - {self.is_deleted}\n"
+            return f'File - {self.name}'
 
 
 # - Permits Sections -
 # These are the sections, taken from the template, that are related to a building permit.
-class PermitSection(models.Model):
+class BuildingPermitSection(models.Model):
 
-    sections_template = models.ForeignKey('SectionsTemplate', on_delete=models.RESTRICT, db_column='sections_template',
-                                    related_name='permit_section', null=False, blank=False)
-    building_permit = models.ForeignKey('BuildingPermit', on_delete=models.RESTRICT, db_column='building_permit',
-                                        related_name='permit_section', null=True, blank=True)
-    content = models.CharField(max_length=600, db_column='content',
-                                    null=False, blank=False)
-    is_deleted = models.BooleanField(db_column='is_deleted', default=False)
+    section_template = models.ForeignKey('SectionTemplate', on_delete=models.RESTRICT,
+                                         db_column='section_template', related_name='building_permit_section')
+    building_permit = models.ForeignKey('BuildingPermit', on_delete=models.RESTRICT,
+                                        db_column='building_permit',  related_name='building_permit_section')
+    name = models.CharField(max_length=256, db_column='name', null=False, blank=True)
+                            # The name of the section may change in the future,
+                            # so the original name of the section is saved,
+                            # from when the building permit was created.
+    content = models.CharField(max_length=500, db_column='content', null=False, blank=False)
+
     class Meta:
-        db_table = 'permit_section'
-        ordering = ['-id']
+        db_table = 'building_permit_section'
+        ordering = ['id']
 
     @deleted_selector
     def __str__(self, sentence):
         if self.is_deleted:
             return sentence
         else:
-            return f'{self.sections_template.section_name} - {self.content}'
-    def __repr__(self):
-        return f"\nFrom The Table 'permit_section':\n" \
-               f"id - {self.pk}\n" \
-               f"template_id - {self.sections_template}\n" \
-               f"building_permit - {self.building_permit}\n" \
-               f"content - {self.content}\n" \
-               f"is_deleted - {self.is_deleted}\n"
+            return f'{self.name} - {self.content}'
 
 
 # - Permits Files -
 # These are the files, taken from the template, that are related to a building permit.
-class PermitFile(models.Model):
-    files_template = models.ForeignKey('FilesTemplate', on_delete=models.RESTRICT,  db_column='files_template',
-                                        related_name='permit_file', null=False, blank=False)
-    building_permit = models.ForeignKey('BuildingPermit', on_delete=models.RESTRICT, db_column='building_permit',
-                                        related_name='permits_file', null=True, blank=True)
-    file_link = models.FileField(upload_to='permits_file_uploads', max_length=256, db_column='file_link',
-                                    null=False, blank=False)
-    is_deleted = models.BooleanField(db_column='is_deleted', default=False)
-    class Meta:
-        db_table = 'permits_file'
-        ordering = ['-id']
+class BuildingPermitFile(models.Model):
 
-    def __str__(self):
-        return self.file_link
-    def __repr__(self):
-        return f"\nFrom The Table 'file':\n" \
-               f"id - {self.pk}\n" \
-               f"template_id - {self.files_template}\n" \
-               f"building_permit - {self.building_permit}\n" \
-               f"file_link - {self.file_link}\n" \
-               f"is_deleted - {self.is_deleted}\n"
+    file_template = models.ForeignKey('FileTemplate', on_delete=models.RESTRICT,
+                                      db_column='file_template', related_name='building_permit_file')
+    building_permit = models.ForeignKey('BuildingPermit', on_delete=models.RESTRICT,
+                                        db_column='building_permit', related_name='building_permit_file')
+    name = models.CharField(max_length=256, db_column='name', null=False, blank=True)
+                            # The name of the file may change in the future,
+                            # so the original name of the file is saved,
+                            # from when the building permit was created.
+    link = models.FileField(upload_to='building_permit_file_uploads', max_length=256, db_column='link',
+                                    null=False, blank=False)
+
+    class Meta:
+        db_table = 'building_permit_file'
+        ordering = ['id']
+
+    @deleted_selector
+    def __str__(self, sentence):
+        if self.is_deleted:
+            return sentence
+        else:
+            return f'{self.name} of building permit number - {self.building_permit}'
+
 
 # - Permissions -
 # This table is organizing the roles users get when the company manager creates.
 # Users permissions are all based on this role.
 # In addition, the Building_Permits-Companies relation is managed here.
-class Permission(models.Model):
+class Profile(models.Model):
 
-    user = models.ForeignKey(User, on_delete=models.RESTRICT, validators=[validate_status_options],
-                            db_column='user', related_name='permission', null=False, blank=False)
-    company = models.ForeignKey('Company', on_delete=models.RESTRICT,  db_column='company',
-                                related_name='permission', null=False, blank=False)
-    role = UpperCaseCharField(max_length=256, db_column='role', validators=[validate_roles_options],
-                            null=False, blank=False)
+    user = models.OneToOneField(User, on_delete=models.RESTRICT, db_column='user', related_name='profile')
+    company = models.ForeignKey('Company', on_delete=models.RESTRICT,
+                                db_column='company', related_name='profile')
+    role = UpperCaseCharField(max_length=20, db_column='role', validators=[validate_role], null=False, blank=False)
+
     class Meta:
-        db_table = 'permission'
-        ordering = ['-id']
+        db_table = 'profile'
+
     def __str__(self):
-        return self.role
-    def __repr__(self):
-        return f"\nFrom The Table 'Permission':\n" \
-               f"id - {self.pk}\n" \
-               f"user_id - {self.user}\n" \
-               f"company_id - {self.company}\n" \
-               f"role - {self.role}\n"
+        return f'User number {self.user} from company number {self.company} is a {self.role}'
+

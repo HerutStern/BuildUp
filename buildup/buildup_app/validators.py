@@ -1,14 +1,12 @@
 from rest_framework.exceptions import ValidationError
 
 
-def validate_status_options(value):
-    statuses_list = ['EDITING', 'QUALITY_CHECK', 'SIGNATURES_ROUND', 'FINAL_APPROVAL', 'APPROVED', 'CANCELLED']
+def validate_building_permit_status(value):
+    statuses_list = ['PENDING', 'APPROVED', 'REJECTED']
     if value not in statuses_list:
         raise ValidationError(f'{value} is not a valid status choice.')
 
-def validate_roles_options(value):
-    roles_list = ['QUALITY_CHECKER', 'PERMIT_INSPECTOR', 'FINAL_APPROVAL', 'COMPANY_MANAGER', 'PROJECT_MANAGER']
-    if value not in roles_list:
+def validate_role(value):
+    statuses_list = ['COMPANY_MANAGER', 'PROJECT_MANAGER']
+    if value not in statuses_list:
         raise ValidationError(f'{value} is not a valid role choice.')
-
-

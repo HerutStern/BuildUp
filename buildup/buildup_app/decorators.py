@@ -1,3 +1,5 @@
+
+
 def deleted_selector(func):
     def wrapper(*args, **kwargs):
         sentence = "What you have been looking for is not available anymore."

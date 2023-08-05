@@ -4,54 +4,88 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from buildup_app.models import Company, Permission
-from buildup_app.users.serializers import SignupSerializer
+from buildup_app.models import Profile
+from buildup_app.users.serializers import SignupSerializer, ProfileSerializer, CompanySerializer
 
 
-# - Sign-Up Function -
-#
-# permissions:
-# 1 - opening an account for a new manager, while also creating the new company.
-# 2 - for the manager to add a new company worker.
-#
-# * You can't open a new account without opening a new company.
-# * Only the company manager can create new accounts for  his company workers.
-@api_view(['POST'])
+
+@api_view(['POST', 'GET']) # GET method is for development uses
 def signup(request):
-    new_user = SignupSerializer(data=request.data)
-    new_user.is_valid(raise_exception=True)
-    new_user.save()
-    return Response(data=new_user.data, status=status.HTTP_202_ACCEPTED)
+    user = None
+    user_serializer = None
+
+    # User serializer -
+    if request.method == 'POST':
+        user_serializer = SignupSerializer(data=request.data)
+        user_serializer.is_valid(raise_exception=True)
+        user = user_serializer.save()
+
+    elif request.method == 'GET':
+        user = get_object_or_404(User, username=request.data.get('username'))
+        user_serializer = SignupSerializer(instance=user)
+
+
+    # Profile serializer -
+    profile = get_object_or_404(Profile, user=user)
+    profile_serializer = ProfileSerializer(instance=profile)
+
+    # Company serializer -
+    company = profile.company
+    company_serializer = CompanySerializer(instance=company)
+
+    # Serializing the data from each serializer
+    user_data = user_serializer.data
+    profile_data = profile_serializer.data
+    company_data = company_serializer.data
+
+
+    # Creating a dictionary containing the serialized data from all serializers
+    data = {
+        'user': user_data,
+        'company': company_data,
+        'profile': profile_data
+    }
+    return Response(data=data, status=status.HTTP_200_OK)
 
 
 
 
-# - Getting User Information Function -
-@api_view(['GET'])
+
+
+@api_view(['GET', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def user_information(request):
-    serializer = SignupSerializer(instance=request.user)
-    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+def user(request):
+
+    if request.method == 'GET':
+        # User serializer -
+        user_serializer = SignupSerializer(instance=request.user)
+
+        # Profile serializer -
+        profile = get_object_or_404(Profile, user=request.user)
+        profile_serializer = ProfileSerializer(instance=profile)
+
+        # Company serializer -
+        company = profile.company
+        company_serializer = CompanySerializer(instance=company)
+
+        # Serializing the data from each serializer
+        user_data = user_serializer.data
+        profile_data = profile_serializer.data
+        company_data = company_serializer.data
+
+        # Creating a dictionary containing the serialized data from all serializers
+        data = {
+            'user': user_data,
+            'company': company_data,
+            'profile': profile_data
+        }
+        return Response(data=data, status=status.HTTP_202_ACCEPTED)
+
+    elif request.method == 'DELETE':
+        user = request.user
+        user.is_active = False
+        user.save()
+        return Response({'message': f"User '{user.username}' has been deactivated."},
+                        status=status.HTTP_410_GONE)
 
 
-# - Getting All Company Users -
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_all_company_users(request, company_id):
-    company = get_object_or_404(Company, pk=company_id)
-    permissions = Permission.objects.filter(company=company)
-    users = [permission.user for permission in permissions]
-
-    serializer = SignupSerializer(users, many=True)
-
-    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-
-
-@api_view(['DELETE'])
-def user_delete(request, user_id):
-
-    user = get_object_or_404(User, pk=user_id)
-    user.is_active = False
-    user.save()
-    return Response({'message': f"User '{user.username}' has been deactivated."},
-                    status=status.HTTP_202_ACCEPTED)
