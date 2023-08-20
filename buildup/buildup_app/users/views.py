@@ -49,9 +49,6 @@ def signup(request):
 
 
 
-
-
-
 @api_view(['GET', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def user(request):

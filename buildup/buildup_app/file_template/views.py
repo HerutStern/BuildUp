@@ -1,3 +1,6 @@
+from django.db import transaction
+from django.http import QueryDict
+from django.utils.datastructures import MultiValueDict
 from rest_framework import mixins, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -32,3 +35,22 @@ class FileTemplateViewSet(mixins.CreateModelMixin,
         instance.is_deleted = True
         instance.save()
         return Response(status=status.HTTP_410_GONE)
+
+    def create(self, request, *args, **kwargs):
+        with transaction.atomic():
+            # Getting user company -
+            profile = get_object_or_404(Profile, user=request.user)
+            company = profile.company
+            company_serializer = CompanySerializer(company)
+
+            # Recreating data with the company id -
+            data_copy = request.data.copy()
+            data_copy['company'] = company_serializer.data['id']
+
+            # Rest -
+            serializer = self.get_serializer(data=data_copy)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
