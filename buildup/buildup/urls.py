@@ -24,7 +24,8 @@ urlpatterns = [
     path('api/buildup/', include('buildup_app.users.urls')),
     path('api/buildup/', include('buildup_app.company_file.urls')),
     path('api/buildup/', include('buildup_app.file_template.urls')),
-    path('api/buildup/', include('buildup_app.section_template.urls'))
+    path('api/buildup/', include('buildup_app.section_template.urls')),
+    path('api/buildup/', include('buildup_app.building_permit.urls'))
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

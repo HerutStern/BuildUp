@@ -1,27 +1,14 @@
-from email.message import EmailMessage
-import ssl
-import smtplib
+import random
 
-# buildup - rqqrozpfeilayrbq
-# buildup - buildupbuildingpermits@gmail.com
+def generate_unique_5_digit_number(used_numbers):
+    while True:
+        new_number = random.randint(10000, 99999)
+        if new_number not in used_numbers:
+            used_numbers.add(new_number)
+            return new_number
 
-email_sender = 'buildupbuildingpermits@gmail.com'
-email_password = 'rqqrozpfeilayrbq'
-email_receiver = 'herutstern@outlook.com'
-
-subject = 'yeeeeeessssssss'
-body = """
-I did it!!
-"""
-
-em = EmailMessage()
-em['From'] = email_sender
-em['To'] = email_receiver
-em['Subject'] = subject
-em.set_content(body)
-
-context = ssl.create_default_context()
-
-with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-    smtp.login(email_sender, email_password)
-    smtp.sendmail(email_sender, email_receiver, em.as_string())
+# Example usage:
+used_numbers_set = set()
+for _ in range(1):
+    new_number = generate_unique_5_digit_number(used_numbers_set)
+    print(new_number)

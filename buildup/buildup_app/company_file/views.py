@@ -21,7 +21,7 @@ from buildup_app.users.serializers import CompanySerializer
 # All the other users can not upload or delete those, they can just watch (or download) the files.
 
 class PageClass(PageNumberPagination):
-    page_size = 50
+    page_size = 10
     # page_query_param = 'bbb'
 class CompanyFileViewSet(mixins.CreateModelMixin,
                    mixins.RetrieveModelMixin,

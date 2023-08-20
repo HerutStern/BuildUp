@@ -68,18 +68,14 @@ class BuildingPermit(models.Model):
     creation_date = models.DateField(db_column='creation_date', auto_now_add=True)
     status = UpperCaseCharField(max_length=20, db_column="status", default='PENDING',
                                 validators=[validate_building_permit_status])
-    approval_date = models.DateField(db_column='approval_date', blank=True, null=True)
+    approval_date = models.DateField(db_column='approval_date', default=None, blank=True, null=True)
 
     class Meta:
         db_table = 'building_permit'
         ordering = ['creation_date']
 
-    @deleted_selector
-    def __str__(self, sentence):
-        if self.is_deleted:
-            return sentence
-        else:
-            return f'Permit - {self.name}, managed by {self.user.name}'
+    def __str__(self):
+        return f'Permit - {self.name}, managed by {self.user.name}'
 
 
 # - Sections Template -
@@ -146,12 +142,8 @@ class BuildingPermitSection(models.Model):
         db_table = 'building_permit_section'
         ordering = ['id']
 
-    @deleted_selector
-    def __str__(self, sentence):
-        if self.is_deleted:
-            return sentence
-        else:
-            return f'{self.name} - {self.content}'
+    def __str__(self):
+        return f'{self.name} - {self.content}'
 
 
 # - Permits Files -
@@ -173,12 +165,8 @@ class BuildingPermitFile(models.Model):
         db_table = 'building_permit_file'
         ordering = ['id']
 
-    @deleted_selector
-    def __str__(self, sentence):
-        if self.is_deleted:
-            return sentence
-        else:
-            return f'{self.name} of building permit number - {self.building_permit}'
+    def __str__(self):
+        return f'{self.name} of building permit number - {self.building_permit}'
 
 
 # - Permissions -
