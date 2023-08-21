@@ -1,13 +1,13 @@
 from django import forms
-from buildup_app.models import CompanyFile
+from buildup_app.models import BuildingPermitFile
 from buildup_app.validators import validate_file_type, validate_file_size
 
 
 # Upload files - for CompanyFile
-class CompanyFileForm(forms.ModelForm):
+class BuildingPermitFileForm(forms.ModelForm):
 
     class Meta:
-        model = CompanyFile
+        model = BuildingPermitFile
         fields = '__all__'
 
         # A Note About Fields-

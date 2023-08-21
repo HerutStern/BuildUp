@@ -19,7 +19,13 @@ urlpatterns = [
     path('api/buildup/', include('buildup_app.section_template.urls')),
 
     # Building Permit:
-    path('api/buildup/', include('buildup_app.building_permit.urls'))
+    path('api/buildup/', include('buildup_app.building_permit.urls')),
+
+    # Building Permit File:
+    path('api/buildup/', include('buildup_app.building_permit.building_permit_file.urls')),
+
+    # Building Permit Section:
+    path('api/buildup/', include('buildup_app.building_permit.building_permit_section.urls'))
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
