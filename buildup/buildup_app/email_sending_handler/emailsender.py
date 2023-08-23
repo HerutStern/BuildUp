@@ -6,25 +6,27 @@ from rest_framework.response import Response
 
 
 # - Sending an Email Function -
-def send_an_email(request):
-
-    # buildup Email password - ***
-    # buildup Email - ***
+def send_an_email(email_receiver, building_permit_id, building_permit_new_status):
 
     # Email Information:
-    email_sender = '***'
-    email_password = '***'
-    email_receiver = 'herutstern@outlook.com'  # temporary
-    building_number_id = 2  # temporary
-    building_new_status = 'QUALITY_CHECKER'  # temporary
+    email_sender = ''
+    email_password = ''
+    # email_receiver = 'herutstern@outlook.com'  # temporary
+    # building_id = 2  # temporary
+    # building_new_status = 'PENDING'  # temporary
 
     # Email context:
-    subject = f'Building Permit Status Has Been Changed - {building_number_id}'
+    subject = f'Building Permit Status Has Been Changed - {building_permit_id}'
     body = f"""
-        Building number - {building_number_id}
-        is now on {building_new_status}.
-
+        Building number - {building_permit_id}
+        is now on {building_permit_new_status}.
+        
+        
+        BUILDUP | Your Building Permits Manager
+        buildupbuildingpermits@gmail.com
+        link
         """
+
     # Setting the Email message with EmailMessage()
     emailmessage = EmailMessage()
     emailmessage['From'] = email_sender
@@ -41,6 +43,10 @@ def send_an_email(request):
             smtp.login(email_sender, email_password)
             smtp.sendmail(email_sender, email_receiver, emailmessage.as_string())
         except smtplib.SMTPException as e:
+            # return 'error'
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # return 'sent'
         return Response(status=status.HTTP_202_ACCEPTED)
+
+# print(send_an_email())

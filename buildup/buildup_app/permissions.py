@@ -3,14 +3,15 @@ from rest_framework.permissions import BasePermission
 from buildup_app.models import Profile
 
 
-# The ManagerPermission is for when anyone csn use "list" and "retrieve",
-# otherwise you have to be a 'COMPANY_MANAGER'
+# Permission to view only except for a company manager:
 class ManagerPermission(BasePermission):
+    # The manager permission is for when anyone can use "list" and "retrieve",
+    # otherwise you have to be a 'COMPANY_MANAGER'
     def has_permission(self, request, view):
         # User Profile -
         profile = get_object_or_404(Profile, user=request.user.id)
 
-        # Condition -
+        # Permission condition -
         if view.action == 'create':
             # Only COMPANY_MANAGER can create -
             return profile.role == 'COMPANY_MANAGER' # Returns True for company managers
@@ -22,18 +23,19 @@ class ManagerPermission(BasePermission):
         # User Profile -
         profile = get_object_or_404(Profile, user=request.user.id)
 
-        # Condition -
+        # Permission condition -
         if view.action in ['update', 'partial_update', 'destroy']:
-
             # Only COMPANY_MANAGER can update, partial_update, and destroy -
             return profile.role == 'COMPANY_MANAGER' # Returns True for company managers
 
         # Otherwise -
         return True
 
-# The BuildingPermitApprovalPermission is for when needed to approve or reject a building permit,
-# only 'COMPANY_MANAGER' can perform updating
+
+# Permission to approve\ reject a building permit only by a company manager:
 class BuildingPermitApprovalPermission(BasePermission):
+    # The building permit approval permission is for approving or rejecting a building permit,
+    # only 'COMPANY_MANAGER' can perform updating
     def has_permission(self, request, view):
         return True
 
@@ -41,9 +43,8 @@ class BuildingPermitApprovalPermission(BasePermission):
         # User Profile -
         profile = get_object_or_404(Profile, user=request.user.id)
 
-        # Condition -
+        # Permission condition -
         if view.action in ['update', 'partial_update']:
-
             # Only COMPANY_MANAGER can update and partial_update -
             return profile.role == 'COMPANY_MANAGER' # Returns True for company managers
 

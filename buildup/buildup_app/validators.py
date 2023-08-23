@@ -1,18 +1,18 @@
 from rest_framework.exceptions import ValidationError
 
-# MODELS
+# Models validators:
 def validate_building_permit_status(value): # Building permit statuses
     statuses_list = ['PENDING', 'APPROVED', 'REJECTED']
     if value not in statuses_list:
         raise ValidationError(f'{value} is not a valid status choice.')
 
-def validate_role(value): # Users roles
+def validate_role(value): # User roles
     roles_list = ['COMPANY_MANAGER', 'PROJECT_MANAGER']
     if value not in roles_list:
         raise ValidationError(f'{value} is not a valid role choice.')
 
 
-# FILES
+# Files validators:
 def validate_file_type(value): # Allowed file types
     allowed_types = ['image/jpeg', 'image/png', 'application/pdf']
     # Check:

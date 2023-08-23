@@ -3,13 +3,12 @@ from buildup_app.models import CompanyFile
 from buildup_app.validators import validate_file_type, validate_file_size
 
 
-# Upload files - for CompanyFile
+# Upload company file
 class CompanyFileForm(forms.ModelForm):
 
     class Meta:
         model = CompanyFile
         fields = '__all__'
-
         # A Note About Fields-
         # It is strongly recommended to explicitly set all fields
         # that should be edited in the form using the fields attribute.

@@ -1,5 +1,6 @@
 from django.db import models
 
+# For values taken from a list with uppercase letters
 class UpperCaseCharField(models.CharField):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

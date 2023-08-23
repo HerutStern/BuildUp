@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -7,52 +7,39 @@ from rest_framework.decorators import api_view, permission_classes
 from buildup_app.models import Profile
 from buildup_app.users.serializers import SignupSerializer, ProfileSerializer, CompanySerializer
 
-
-
-@api_view(['POST', 'GET']) # GET method is for development uses
+@api_view(['POST'])
 def signup(request):
-    user = None
-    user_serializer = None
-
-    # User serializer -
-    if request.method == 'POST':
+    with transaction.atomic():
+        # User serializer -
         user_serializer = SignupSerializer(data=request.data)
         user_serializer.is_valid(raise_exception=True)
-        user = user_serializer.save()
+        user_serializer.save()
 
-    elif request.method == 'GET':
-        user = get_object_or_404(User, username=request.data.get('username'))
-        user_serializer = SignupSerializer(instance=user)
+        # Profile serializer -
+        profile = get_object_or_404(Profile, user=user_serializer.data['id'])
+        profile_serializer = ProfileSerializer(instance=profile)
 
+        # Company serializer -
+        company = profile.company
+        company_serializer = CompanySerializer(instance=company)
 
-    # Profile serializer -
-    profile = get_object_or_404(Profile, user=user)
-    profile_serializer = ProfileSerializer(instance=profile)
+        # Serializing the data from each model
+        user_data = user_serializer.data
+        profile_data = profile_serializer.data
+        company_data = company_serializer.data
 
-    # Company serializer -
-    company = profile.company
-    company_serializer = CompanySerializer(instance=company)
+        # Creating a data containing the serialized data from all models
+        data = {
+            'user': user_data,
+            'company': company_data,
+            'profile': profile_data
+        }
 
-    # Serializing the data from each serializer
-    user_data = user_serializer.data
-    profile_data = profile_serializer.data
-    company_data = company_serializer.data
-
-
-    # Creating a dictionary containing the serialized data from all serializers
-    data = {
-        'user': user_data,
-        'company': company_data,
-        'profile': profile_data
-    }
-    return Response(data=data, status=status.HTTP_200_OK)
-
-
+        return Response(data=data, status=status.HTTP_200_OK)
 
 @api_view(['GET', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def user(request):
-
     if request.method == 'GET':
         # User serializer -
         user_serializer = SignupSerializer(instance=request.user)
@@ -70,7 +57,7 @@ def user(request):
         profile_data = profile_serializer.data
         company_data = company_serializer.data
 
-        # Creating a dictionary containing the serialized data from all serializers
+        # Creating a data containing the serialized data from all models
         data = {
             'user': user_data,
             'company': company_data,
@@ -78,11 +65,9 @@ def user(request):
         }
         return Response(data=data, status=status.HTTP_202_ACCEPTED)
 
-    elif request.method == 'DELETE':
-        user = request.user
-        user.is_active = False
-        user.save()
-        return Response({'message': f"User '{user.username}' has been deactivated."},
+    elif request.method == 'DELETE': # Instead of deleting, changing field is_active to 'False'
+        the_user = request.user
+        the_user.is_active = False
+        the_user.save()
+        return Response({'message': f"User '{the_user.username}' has been deactivated."},
                         status=status.HTTP_410_GONE)
-
-

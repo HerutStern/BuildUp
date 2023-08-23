@@ -1,13 +1,11 @@
 from django.db import transaction
 from django.http import QueryDict
 from django.utils.datastructures import MultiValueDict
-from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
 from buildup_app.company_file.forms import CompanyFileForm
 from buildup_app.company_file.serializers import CompanyFileSerializer
@@ -16,13 +14,10 @@ from buildup_app.permissions import ManagerPermission
 from buildup_app.users.serializers import CompanySerializer
 
 
-# A note about company files -
-# The manager can upload or delete files on his company, for the use of the company users.
-# All the other users can not upload or delete those, they can just watch (or download) the files.
-
 class PageClass(PageNumberPagination):
-    page_size = 10
-    # page_query_param = 'bbb'
+    page_size = 20
+    # page_query_param = ''
+
 class CompanyFileViewSet(mixins.CreateModelMixin,
                    mixins.RetrieveModelMixin,
                    mixins.UpdateModelMixin,
@@ -35,7 +30,7 @@ class CompanyFileViewSet(mixins.CreateModelMixin,
     permission_classes = [IsAuthenticated, ManagerPermission]
     queryset = CompanyFile.objects.all()
 
-    def get_queryset(self):
+    def get_queryset(self): # Filtering the queryset to user's company data only
         profile = get_object_or_404(Profile, user=self.request.user)
         company = profile.company
         company_serializer = CompanySerializer(company)
@@ -51,7 +46,7 @@ class CompanyFileViewSet(mixins.CreateModelMixin,
             company = profile.company
             company_serializer = CompanySerializer(company)
 
-            # Recreating request.data with the company id -
+            # Adding the company id and handling files data -
             data_copy = request.data.copy()
             serializer_data = data_copy
             additional_data = {'company': company_serializer.data['id']}
@@ -60,12 +55,12 @@ class CompanyFileViewSet(mixins.CreateModelMixin,
             updated_post_data.update(new_data)
             updated_files_data = MultiValueDict(request.FILES)
 
-            # Creating file -
+            # Creating the file with the updated data -
             form = CompanyFileForm(updated_post_data, updated_files_data)
             form.is_valid()
             form = form.save()
+
+            # Return serialized data -
             company_file = get_object_or_404(CompanyFile, id=form.id)
             serializer = CompanyFileSerializer(company_file)
             return Response(serializer.data)
-
-
