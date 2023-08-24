@@ -4,4 +4,5 @@ djangorestframework
 django-filter
 djangorestframework-simplejwt
 django-cors-headers
+google-cloud-storage
 

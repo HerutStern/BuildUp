@@ -40,8 +40,9 @@ class CompanyFile(models.Model):
                                 related_name='company_file')
     name = models.CharField(max_length=256, db_column='name', null=False, blank=False)
                             # The name for the file
-    link = models.FileField(upload_to='company_file_uploads', max_length=256, db_column='link',
-                            null=False, blank=False)
+    # link = models.FileField(upload_to='company_file_uploads', max_length=256, db_column='link',
+    #                         null=False, blank=False)
+    link = models.CharField(max_length=256, db_column='link', null=False, blank=False)
 
     class Meta:
         db_table = 'company_file'
@@ -159,8 +160,9 @@ class BuildingPermitFile(models.Model):
                             # The name of the file may change in the future,
                             # so the original name of the file is saved,
                             # from when the building permit was created.
-    link = models.FileField(upload_to='building_permit_file_uploads', max_length=256, db_column='link',
-                                    null=False, blank=False)
+    # link = models.FileField(upload_to='building_permit_file_uploads', max_length=256, db_column='link',
+    #                                 null=False, blank=False)
+    link = models.CharField(max_length=256, db_column='link', null=False, blank=False)
 
     class Meta:
         db_table = 'building_permit_file'
