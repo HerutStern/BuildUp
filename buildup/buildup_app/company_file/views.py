@@ -1,18 +1,10 @@
-import os
-import uuid
-
 from django.db import transaction
-from django.http import QueryDict
-from django.utils.datastructures import MultiValueDict
-from google.cloud import storage
-from google.oauth2 import service_account
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins, status
-from buildup_app.company_file.forms import CompanyFileForm
 from buildup_app.company_file.serializers import CompanyFileSerializer
 from buildup_app.files_handler.upload_files import upload
 from buildup_app.models import CompanyFile, Profile
@@ -52,39 +44,17 @@ class CompanyFileViewSet(mixins.CreateModelMixin,
             company = profile.company
             company_serializer = CompanySerializer(company)
 
-            # # Adding the company id and handling files data -
-            # data_copy = request.data.copy()
-            # serializer_data = data_copy
-            # additional_data = {'company': company_serializer.data['id']}
-            # new_data = {**serializer_data, **additional_data}
-            # updated_post_data = QueryDict(mutable=True)
-            # updated_post_data.update(new_data)
-            # updated_files_data = MultiValueDict(request.FILES)
-            #
-            # # Creating the file with the updated data -
-            # form = CompanyFileForm(updated_post_data, updated_files_data)
-            # form.is_valid()
-            # form = form.save()
-            #
-            #
-            # # Return serialized data -
-            # company_file = get_object_or_404(CompanyFile, id=form.id)
-            # serializer = CompanyFileSerializer(company_file)
-            # return Response(serializer.data)
-
-
-            # Upload File -
-            blob = upload(request, 'company_files')
+            # Uploading File -
+            blob = upload(request=request, folder='company_files') # The function 'upload' returns the blob
 
             # Updating data -
             data_copy = request.data.copy()
             data_copy['company'] = company_serializer.data['id']
             data_copy['link'] = blob.public_url
 
-            # Return serialized data -
+            # Returning serialized data -
             serializer = self.get_serializer(data=data_copy)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-

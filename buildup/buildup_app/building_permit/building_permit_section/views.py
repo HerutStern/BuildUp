@@ -18,7 +18,7 @@ class BuildingPermitSectionViewSet(mixins.CreateModelMixin,
     permission_classes = [IsAuthenticated]
     queryset = BuildingPermitSection.objects.all()
 
-    def create(self, request, *args, **kwargs): # This is used to finish the building permit creation process
+    def create(self, request, *args, **kwargs): # This is used for finishing the building permit creation process
         # Adding section template name to data -
         data_copy = request.data.copy()
         section_template = get_object_or_404(SectionTemplate, id=data_copy['section_template'])

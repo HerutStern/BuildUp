@@ -8,11 +8,12 @@ from rest_framework.response import Response
 # - Sending an Email Function -
 def send_an_email(email_receiver, building_permit_id, building_permit_new_status):
 
-
+    # buildup Email password - rqqrozpfeilayrbq
+    # buildup Email - buildupbuildingpermits@gmail.com
 
     # Email Information:
-    email_sender = ''
-    email_password = ''
+    email_sender = 'buildupbuildingpermits@gmail.com'
+    email_password = 'rqqrozpfeilayrbq'
     # email_receiver = 'herutstern@outlook.com'  # temporary
     # building_id = 2  # temporary
     # building_new_status = 'PENDING'  # temporary
