@@ -8,6 +8,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
 from buildup_app.building_permit.building_permit_file.serializers import BuildingPermitFileSerializer
 from buildup_app.building_permit.building_permit_section.serializers import BuildingPermitSectionSerializer
+from buildup_app.building_permit.filters import BuildingPermitFilterSet
 from buildup_app.building_permit.serializers import BuildingPermitSerializer
 from buildup_app.models import Profile, BuildingPermit, BuildingPermitFile, BuildingPermitSection
 from buildup_app.permissions import BuildingPermitApprovalPermission
@@ -28,6 +29,7 @@ class BuildingPermitViewSet(mixins.CreateModelMixin,
     pagination_class = PageClass
     permission_classes = [IsAuthenticated, BuildingPermitApprovalPermission]
     queryset = BuildingPermit.objects.all()
+    filterset_class = BuildingPermitFilterSet
 
     def get_queryset(self): # Filtering the queryset to user's company data only
         profile = get_object_or_404(Profile, user=self.request.user)
@@ -40,7 +42,7 @@ class BuildingPermitViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         # A note about the creation process -
         # Right after using this 'create' function on UI,
-        # BuildingPermitFileViewSet and BuildingPermitSectionViewSet 'create' functions need be used
+        # BuildingPermitFileViewSet and BuildingPermitSectionViewSet 'create' functions will be used
         # with this new building permit ID, to complete the building permit creation.
 
         with transaction.atomic():
