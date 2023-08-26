@@ -1,4 +1,3 @@
-from django.db import transaction
 from rest_framework import mixins, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -29,22 +28,21 @@ class SectionTemplateViewSet(mixins.CreateModelMixin,
         return queryset
 
     def create(self, request, *args, **kwargs):
-        with transaction.atomic():
-            # Getting the user's company -
-            profile = get_object_or_404(Profile, user=request.user)
-            company = profile.company
-            company_serializer = CompanySerializer(company)
+        # Getting the user's company -
+        profile = get_object_or_404(Profile, user=request.user)
+        company = profile.company
+        company_serializer = CompanySerializer(company)
 
-            # Recreating the data with the user's company id -
-            data_copy = request.data.copy()
-            data_copy['company'] = company_serializer.data['id']
+        # Recreating the data with the user's company id -
+        data_copy = request.data.copy()
+        data_copy['company'] = company_serializer.data['id']
 
-            # Serializing the updated data and creating the new section template -
-            serializer = self.get_serializer(data=data_copy)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        # Serializing the updated data and creating the new section template -
+        serializer = self.get_serializer(data=data_copy)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs): # Instead of deleting, changing field is_deleted to 'True'
         instance = self.get_object()

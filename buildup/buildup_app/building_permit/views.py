@@ -120,8 +120,7 @@ class BuildingPermitViewSet(mixins.CreateModelMixin,
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        # If 'prefetch_related' has been applied to a queryset,
-        # we need to forcibly invalidate the prefetch cache on the instance -
+        # Finishing 'update' view-set function -
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
 
