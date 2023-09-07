@@ -8,9 +8,12 @@ from rest_framework.response import Response
 # - Sending an Email Function -
 def send_an_email(email_receiver, building_permit_id, building_permit_new_status):
 
+    # buildup Email password - rqqrozpfeilayrbq
+    # buildup Email - buildupbuildingpermits@gmail.com
+
     # Email Information:
-    email_sender = ''
-    email_password = ''
+    email_sender = 'buildupbuildingpermits@gmail.com'
+    email_password = 'rqqrozpfeilayrbq'
     # email_receiver = 'herutstern@outlook.com'  # temporary
     # building_id = 2  # temporary
     # building_new_status = 'PENDING'  # temporary
@@ -20,11 +23,10 @@ def send_an_email(email_receiver, building_permit_id, building_permit_new_status
     body = f"""
         Building number - {building_permit_id}
         is now on {building_permit_new_status}.
-        
+        Go check it out on BuildUp (link)
         
         BUILDUP | Your Building Permits Manager
         buildupbuildingpermits@gmail.com
-        link
         """
 
     # Setting the Email message with EmailMessage()
@@ -38,15 +40,15 @@ def send_an_email(email_receiver, building_permit_id, building_permit_new_status
 
     # Sending the Email
     success = False
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+    with smtplib.SMTP_SSL(host='smtp.gmail.com', port=465, context=context) as smtp:
         try:
             smtp.login(email_sender, email_password)
             smtp.sendmail(email_sender, email_receiver, emailmessage.as_string())
         except smtplib.SMTPException as e:
-            # return 'error'
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            # Return 'error'
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
 
-        # return 'sent'
-        return Response(status=status.HTTP_202_ACCEPTED)
+        # Return
+        return Response(status=status.HTTP_200_OK)
 
 # print(send_an_email())
