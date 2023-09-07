@@ -36,7 +36,6 @@ class BuildingPermitFilterSet(django_filters.FilterSet):
     # Project manager filter -
     @staticmethod
     def filter_by_project_manager(queryset, name, value):
-
         try:
             # Getting the user by the project manager name -
             user = User.objects.get(username=value)

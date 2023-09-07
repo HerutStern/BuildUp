@@ -1,4 +1,6 @@
 import datetime
+
+from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import mixins, status
 from rest_framework.generics import get_object_or_404
@@ -85,14 +87,19 @@ class BuildingPermitViewSet(mixins.CreateModelMixin,
             serializer = self.get_serializer(queryset, many=True)
         serialized_data = serializer.data
 
-        # For each building permit data adding the building permit's files and sections -
+        # Customize each building permit's data for UI convenience -
         for building_permit_data in serialized_data:
-            # Adding files -
+            # Changing the id of the user to its username -
+            user_id = building_permit_data['user']
+            user = get_object_or_404(User, id=user_id)
+            building_permit_data['user'] = user.username
+
+            # Adding building permit's files -
             files = BuildingPermitFile.objects.filter(building_permit=building_permit_data['id'])
             files_data = BuildingPermitFileSerializer(instance=files, many=True).data
             building_permit_data['files'] = files_data
 
-            # Adding sections -
+            # Adding building permit's sections -
             sections = BuildingPermitSection.objects.filter(building_permit=building_permit_data['id'])
             sections_data = BuildingPermitSectionSerializer(instance=sections, many=True).data
             building_permit_data['sections'] = sections_data
@@ -106,7 +113,7 @@ class BuildingPermitViewSet(mixins.CreateModelMixin,
     def update(self, request, *args, **kwargs): # The 'update' function will be used for
                                                 # company manager approving or rejecting a building permit
 
-        # Getting the building permit the view is displaying -
+        # Getting the building permit that the view is displaying -
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
 
