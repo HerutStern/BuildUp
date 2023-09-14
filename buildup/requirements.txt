@@ -10,4 +10,4 @@ django-countries
 google-auth
 requests
 gunicorn
-google-cloud-storage
+# google-cloud-storage
