@@ -19,8 +19,10 @@ def upload(request: HttpRequest , folder: str):
     object_name = f"{folder}/{uuid.uuid4()}{ext}"
 
     # Authenticating and establishing a connection to Google Cloud Storage
+    # credentials = service_account.Credentials.from_service_account_file(
+    #     r"C:\BuildUp\buildup-395918-6367d8cbaea8.json")
     credentials = service_account.Credentials.from_service_account_file(
-        r"C:\BuildUp\buildup-395918-6367d8cbaea8.json")
+        "buildup/buildup_app/files_handler/buildup-395918-6367d8cbaea8.json")
     storage_client = storage.Client(credentials=credentials)
     bucket = storage_client.bucket(bucket_name)
 
