@@ -22,7 +22,7 @@ def upload(request: HttpRequest , folder: str):
     # credentials = service_account.Credentials.from_service_account_file(
     #     r"C:\BuildUp\buildup-395918-6367d8cbaea8.json")
     credentials = service_account.Credentials.from_service_account_file(
-        "buildup/buildup_app/files_handler/buildup-395918-6367d8cbaea8.json")
+        "buildup_app/files_handler/buildup-395918-6367d8cbaea8.json")
     storage_client = storage.Client(credentials=credentials)
     bucket = storage_client.bucket(bucket_name)
 
