@@ -23,7 +23,7 @@ def send_an_email(email_receiver, building_permit_id, building_permit_new_status
     body = f"""
         Building number - {building_permit_id}
         is now on {building_permit_new_status}.
-        Go check it out on BuildUp (link)
+        Go check it out on BuildUp http://buildupbuildingpermits.com/
         
         BUILDUP | Your Building Permits Manager
         buildupbuildingpermits@gmail.com

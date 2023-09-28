@@ -17,7 +17,7 @@ from buildup_app.permissions import BuildingPermitApprovalPermission
 from buildup_app.users.serializers import CompanySerializer, SignupSerializer
 
 class PageClass(PageNumberPagination):
-    page_size = 30
+    page_size = 5
     # page_query_param = ''
 
 class BuildingPermitViewSet(mixins.CreateModelMixin,

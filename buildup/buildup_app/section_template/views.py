@@ -48,4 +48,4 @@ class SectionTemplateViewSet(mixins.CreateModelMixin,
         instance = self.get_object()
         instance.is_deleted = True
         instance.save()
-        return Response(status=status.HTTP_410_GONE)
+        return Response(status=status.HTTP_200_OK)

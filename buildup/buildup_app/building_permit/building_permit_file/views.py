@@ -28,10 +28,9 @@ class BuildingPermitFileViewSet(mixins.CreateModelMixin,
             data_copy['name'] = file_template.name
 
             # Uploading File -
-            blob = upload(request, "building_permit_files") # The function 'upload' returns the blob
+            blob = upload(request=request, folder="building_permit_files") # The function 'upload' returns the blob
 
             # Updating data -
-            data_copy = request.data.copy()
             data_copy['link'] = blob.public_url
 
             # Returning serialized data -

@@ -13,7 +13,7 @@ from buildup_app.users.serializers import CompanySerializer
 
 
 class PageClass(PageNumberPagination):
-    page_size = 50
+    page_size = 30
     # page_query_param = ''
 
 class CompanyFileViewSet(mixins.CreateModelMixin,
